@@ -2,6 +2,9 @@
 Unofficial AppImage for Opera Web Browser
 
 ### Known issues
+
+----------------
+
 #### ◆ Language
 As already suggested on [this page](https://forums.opera.com/topic/58114/can-t-change-ui-language-no-option-display-opera-in-that-language/12) run the AppImage fith the flag "--lang=$YOULANGUAGE" to made it work.
 
@@ -9,6 +12,8 @@ Instead, by installing this AppImage via "[AM](https://github.com/ivan-hc/AM-App
 
     opera --lang=$(echo $LANG | cut -c -2) %U
 And this definitelly solves the issue.
+
+----------------
 
 #### ◆ Can't play videos on many sites
 More banally, Ubuntu is switching all its packages to Snap, Opera developers are using an old ffmpeg in their deb package and none have updated it... so none cares about the deb version of Opera. All workaround seems to point to external third-party sources (see issue https://github.com/ivan-hc/Opera-appimage/issues/1).
