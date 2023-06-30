@@ -21,9 +21,17 @@ cat >> ./$APP.AppDir/AppRun << 'EOF'
 APP=opera
 HERE="$(dirname "$(readlink -f "${0}")")"
 export UNION_PRELOAD="${HERE}"
+export LD_LIBRARY_PATH=/lib/:/lib64/:/lib/x86_64-linux-gnu/:/usr/lib/:"${HERE}"/lib_extra/:LD_LIBRARY_PATH
 exec "${HERE}"/$APP "$@"
 EOF
 chmod a+x ./$APP.AppDir/AppRun
+
+# ADD EXTRA LIBS FROM https://github.com/swanux/opera_codecs
+mkdir ./$APP.AppDir/lib_extra
+wget https://github.com/swanux/opera_codecs/raw/master/DEV_FILES/opt/google/chrome/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so -O ./$APP.AppDir/lib_extra/libwidevinecdm.so
+wget https://github.com/swanux/opera_codecs/raw/master/DEV_FILES/usr/lib/x86_64-linux-gnu/opera/lib_extra/libffmpeg.so -O ./$APP.AppDir/lib_extra/libffmpeg.so
+chmod a+x ./$APP.AppDir/lib_extra/*.so
+
 ARCH=x86_64 ./appimagetool -n ./$APP.AppDir
 cd ..
 mv ./tmp/*AppImage ./Opera-Web-Browser-$VERSION-x86_64.AppImage
