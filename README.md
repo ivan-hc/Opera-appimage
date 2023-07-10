@@ -1,5 +1,5 @@
 # Opera-appimage
-Unofficial AppImage for Opera Web Browser
+Unofficial AppImage for Opera Web Browser Stable, Beta and Developer
 
 ### Known issues
 
@@ -20,7 +20,7 @@ More banally, Ubuntu is switching all its packages to Snap, Opera developers are
 
 However, until the deb package has no fixes, I can't update a "pure" AppImage. We need additional third-party libraries.
 
-Those included in this AppImage are provided by https://github.com/swanux/opera_codecs
+Those included in these AppImages are provided by https://github.com/nwjs-ffmpeg-prebuilt (`libffmpeg.so`) and from an official proprietary source (`libwidevinecdm.so`).
 
 NOTE: Opera, Vivaldi, Brave, Google Chrome... are all browsers based on Chromium. Alternativelly use another web browser, like Brave or Vivaldi, they are multiplatform, privacy oriented and more supported than Opera (at least on the Linux-side). 
 
