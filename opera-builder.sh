@@ -28,7 +28,7 @@ APP=opera
 mkdir tmp
 cp -r ./lib_extra ./tmp/lib_extra
 cd ./tmp
-wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-$(uname -m).AppImage -O appimagetool
+wget -q $(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | grep -v zsync | grep -i continuous | grep -i appimagetool | grep -i x86_64 | grep browser_download_url | cut -d '"' -f 4 | head -1) -O appimagetool
 chmod a+x ./appimagetool
 
 DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-stable/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
@@ -55,7 +55,7 @@ chmod a+x ./$APP.AppDir/AppRun
 
 mv ./lib_extra ./$APP.AppDir/lib_extra
 
-ARCH=x86_64 ./appimagetool -n ./$APP.AppDir
+ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
 cd ..
 mv ./tmp/*AppImage ./Opera-Web-Browser-"$VERSION"-x86_64.AppImage
 
@@ -64,7 +64,7 @@ APP=opera
 mkdir tmp2
 cp -r ./lib_extra ./tmp2/lib_extra
 cd ./tmp2
-wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-$(uname -m).AppImage -O appimagetool
+wget -q $(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | grep -v zsync | grep -i continuous | grep -i appimagetool | grep -i x86_64 | grep browser_download_url | cut -d '"' -f 4 | head -1) -O appimagetool
 chmod a+x ./appimagetool
 
 DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-beta/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
@@ -91,7 +91,7 @@ chmod a+x ./$APP.AppDir/AppRun
 
 mv ./lib_extra ./$APP.AppDir/lib_extra
 
-ARCH=x86_64 ./appimagetool -n ./$APP.AppDir
+ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
 cd ..
 mv ./tmp2/*AppImage ./Opera-Web-Browser-BETA-"$VERSION"-x86_64.AppImage
 
@@ -100,7 +100,7 @@ APP=opera
 mkdir tmp3
 cp -r ./lib_extra ./tmp3/lib_extra
 cd ./tmp3
-wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-$(uname -m).AppImage -O appimagetool
+wget -q $(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | grep -v zsync | grep -i continuous | grep -i appimagetool | grep -i x86_64 | grep browser_download_url | cut -d '"' -f 4 | head -1) -O appimagetool
 chmod a+x ./appimagetool
 
 DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-developer/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
@@ -127,6 +127,6 @@ chmod a+x ./$APP.AppDir/AppRun
 
 mv ./lib_extra ./$APP.AppDir/lib_extra
 
-ARCH=x86_64 ./appimagetool -n ./$APP.AppDir
+ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
 cd ..
 mv ./tmp3/*AppImage ./Opera-Web-Browser-DEV-"$VERSION"-x86_64.AppImage
