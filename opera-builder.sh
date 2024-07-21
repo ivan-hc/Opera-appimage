@@ -1,132 +1,86 @@
 #!/bin/sh
 
-# DOWNLOAD EXTRA-LIBS
-mkdir lib_extra
-cd ./lib_extra
-mkdir tmp
-cd ./tmp
-wget $(wget -q https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/latest -O - | grep browser_download_url | grep -i linux | grep -i 64 | cut -d '"' -f 4 | head -1)
-unzip ./*.zip
-cd ..
-mv ./tmp/libffmpeg.so ./libffmpeg.so
-
-mkdir tmp2
-cd ./tmp2
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-ar x ./*.deb
-tar xf ./data.tar.xz
-cd ..
-mv ./tmp2/opt/google/chrome/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so ./libwidevinecdm.so
-
-rm -R -f ./tmp*
-chmod a+x ./*.so
-
-cd ..
-
-# CREATE OPERA STABLE APPIMAGE
 APP=opera
-mkdir tmp
-cp -r ./lib_extra ./tmp/lib_extra
-cd ./tmp
-wget -q "$(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | sed 's/"/ /g; s/ /\n/g' | grep -o 'https.*continuous.*tool.*86_64.*mage$')" -O appimagetool
-chmod a+x ./appimagetool
 
-DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-stable/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
-wget https://deb.opera.com/opera-stable/pool/non-free/o/opera-stable/"$DEB"
-ar x ./*.deb
-tar xf ./data.tar.xz
-mkdir $APP.AppDir
-mv ./usr/lib/x86_64-linux-gnu/opera/* ./$APP.AppDir/
-mv ./usr/share/applications/*.desktop ./$APP.AppDir/
-sed -i -e '/TargetEnvironment/d' ./$APP.AppDir/*.desktop
-mv ./usr/share/pixmaps/* ./$APP.AppDir/
-tar xf ./control.tar.xz
-VERSION=$(cat ./control | grep -i version | cut -c 10-)
+# TEMPORARY DIRECTORY
+mkdir -p tmp
+cd ./tmp || exit 1
 
-cat >> ./$APP.AppDir/AppRun << 'EOF'
-#!/bin/sh
-APP=opera
-HERE="$(dirname "$(readlink -f "${0}")")"
-export UNION_PRELOAD="${HERE}"
-export LD_LIBRARY_PATH=/lib/:/lib64/:/lib/x86_64-linux-gnu/:/usr/lib/:"${HERE}"/lib_extra/:LD_LIBRARY_PATH
-exec "${HERE}"/$APP "$@"
-EOF
-chmod a+x ./$APP.AppDir/AppRun
+# DOWNLOAD APPIMAGETOOL
+if ! test -f ./appimagetool; then
+	wget -q "$(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | sed 's/"/ /g; s/ /\n/g' | grep -o 'https.*continuous.*tool.*86_64.*mage$')" -O appimagetool
+	chmod a+x ./appimagetool
+fi
 
-mv ./lib_extra ./$APP.AppDir/lib_extra
+# DOWNLOAD WIDEVINE
+if ! test -f ./*.deb; then
+	wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+	ar x ./*.deb
+	tar xf ./data.tar.xz
+	mv ./opt/google/chrome/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so ./libwidevinecdm.so
+fi
 
-ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
+# DOWNLOAD A WORKING VERSION OF FFMPEG (THE ONE IN OPERA IS BROKEN...FROM YEARS)
+if ! test -f ./*.zip; then
+	wget "$(wget -q https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/latest -O - | grep browser_download_url | grep -i linux | grep -i 64 | cut -d '"' -f 4 | head -1)"
+	unzip ./*.zip
+fi
+
+# CREATE OPERA BROWSER APPIMAGES
+
+_create_opera_appimage(){
+	if wget --version | head -1 | grep -q ' 1.'; then
+		wget -q --no-verbose --show-progress --progress=bar "https://deb.opera.com/opera-stable/pool/non-free/o/$APP-$CHANNEL/$(wget -q https://deb.opera.com/"$APP"-"$CHANNEL"/pool/non-free/o/"$APP"-"$CHANNEL"/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')"
+	else
+		wget "https://deb.opera.com/opera-stable/pool/non-free/o/$APP-$CHANNEL/$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/"$APP"-"$CHANNEL"/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')"
+	fi
+	ar x ./*.deb
+	tar xf ./data.tar.xz
+	mkdir "$APP".AppDir
+	mv ./usr/lib/x86_64-linux-gnu/oper*/* ./"$APP".AppDir/
+	mv ./usr/share/applications/*.desktop ./"$APP".AppDir/
+	sed -i -e '/TargetEnvironment/d' ./"$APP".AppDir/*.desktop
+	mv ./usr/share/pixmaps/* ./"$APP".AppDir/
+	cp ../libwidevinecdm.so ./"$APP".AppDir/
+	mv ./"$APP".AppDir/libffmpeg.so ./"$APP".AppDir/libffmpeg.so.old
+	cp ../libffmpeg.so ./"$APP".AppDir/
+	tar xf ./control.tar.xz
+	VERSION=$(cat control | grep Version | cut -c 10-)
+
+	cat <<-'HEREDOC' >> ./"$APP".AppDir/AppRun
+	#!/bin/sh
+	APP=CHROME
+	HERE="$(dirname "$(readlink -f "${0}")")"
+	export UNION_PRELOAD="${HERE}"
+	exec "${HERE}"/$APP "$@"
+	HEREDOC
+	chmod a+x ./"$APP".AppDir/AppRun
+	if [ "$CHANNEL" = "stable" ]; then
+		sed -i "s/CHROME/$APP/g" ./"$APP".AppDir/AppRun
+	else
+		sed -i "s/CHROME/$APP-$CHANNEL/g" ./"$APP".AppDir/AppRun
+	fi
+	ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./"$APP".AppDir
+	mv ./*.AppImage ./Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage || exit 1
+}
+
+CHANNEL="stable"
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+_create_opera_appimage
 cd ..
-mv ./tmp/*AppImage ./Opera-Web-Browser-"$VERSION"-x86_64.AppImage
+mv ./"$CHANNEL"/*.AppImage ./
 
-# CREATE OPERA BETA APPIMAGE
-APP=opera
-mkdir tmp2
-cp -r ./lib_extra ./tmp2/lib_extra
-cd ./tmp2
-wget -q "$(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | sed 's/"/ /g; s/ /\n/g' | grep -o 'https.*continuous.*tool.*86_64.*mage$')" -O appimagetool
-chmod a+x ./appimagetool
-
-DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-beta/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
-wget https://deb.opera.com/opera-stable/pool/non-free/o/opera-beta/"$DEB"
-ar x ./*.deb
-tar xf ./data.tar.xz
-mkdir $APP.AppDir
-mv ./usr/lib/x86_64-linux-gnu/opera-beta/* ./$APP.AppDir/
-mv ./usr/share/applications/*.desktop ./$APP.AppDir/
-sed -i -e '/TargetEnvironment/d' ./$APP.AppDir/*.desktop
-mv ./usr/share/pixmaps/* ./$APP.AppDir/
-tar xf ./control.tar.xz
-VERSION=$(cat ./control | grep -i version | cut -c 10-)
-
-cat >> ./$APP.AppDir/AppRun << 'EOF'
-#!/bin/sh
-APP=opera-beta
-HERE="$(dirname "$(readlink -f "${0}")")"
-export UNION_PRELOAD="${HERE}"
-export LD_LIBRARY_PATH=/lib/:/lib64/:/lib/x86_64-linux-gnu/:/usr/lib/:"${HERE}"/lib_extra/:LD_LIBRARY_PATH
-exec "${HERE}"/$APP "$@"
-EOF
-chmod a+x ./$APP.AppDir/AppRun
-
-mv ./lib_extra ./$APP.AppDir/lib_extra
-
-ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
+CHANNEL="beta"
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+_create_opera_appimage
 cd ..
-mv ./tmp2/*AppImage ./Opera-Web-Browser-BETA-"$VERSION"-x86_64.AppImage
+mv ./"$CHANNEL"/*.AppImage ./
 
-# CREATE OPERA DEVELOPER APPIMAGE
-APP=opera
-mkdir tmp3
-cp -r ./lib_extra ./tmp3/lib_extra
-cd ./tmp3
-wget -q "$(wget -q https://api.github.com/repos/probonopd/go-appimage/releases -O - | sed 's/"/ /g; s/ /\n/g' | grep -o 'https.*continuous.*tool.*86_64.*mage$')" -O appimagetool
-chmod a+x ./appimagetool
-
-DEB=$(wget -q https://deb.opera.com/opera-stable/pool/non-free/o/opera-developer/ -O - | grep deb | tail -1 | grep -o -P '(?<=.deb">).*(?=</a>)')
-wget https://deb.opera.com/opera-stable/pool/non-free/o/opera-developer/"$DEB"
-ar x ./*.deb
-tar xf ./data.tar.xz
-mkdir $APP.AppDir
-mv ./usr/lib/x86_64-linux-gnu/opera-developer/* ./$APP.AppDir/
-mv ./usr/share/applications/*.desktop ./$APP.AppDir/
-sed -i -e '/TargetEnvironment/d' ./$APP.AppDir/*.desktop
-mv ./usr/share/pixmaps/* ./$APP.AppDir/
-tar xf ./control.tar.xz
-VERSION=$(cat ./control | grep -i version | cut -c 10-)
-
-cat >> ./$APP.AppDir/AppRun << 'EOF'
-#!/bin/sh
-APP=opera-developer
-HERE="$(dirname "$(readlink -f "${0}")")"
-export UNION_PRELOAD="${HERE}"
-export LD_LIBRARY_PATH=/lib/:/lib64/:/lib/x86_64-linux-gnu/:/usr/lib/:"${HERE}"/lib_extra/:LD_LIBRARY_PATH
-exec "${HERE}"/$APP "$@"
-EOF
-chmod a+x ./$APP.AppDir/AppRun
-
-mv ./lib_extra ./$APP.AppDir/lib_extra
-
-ARCH=x86_64 VERSION=$(./appimagetool -v | grep -o '[[:digit:]]*') ./appimagetool -s ./$APP.AppDir
+CHANNEL="developer"
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+_create_opera_appimage
 cd ..
-mv ./tmp3/*AppImage ./Opera-Web-Browser-DEV-"$VERSION"-x86_64.AppImage
+mv ./"$CHANNEL"/*.AppImage ./
+
+cd ..
+mv ./tmp/*.AppImage ./
