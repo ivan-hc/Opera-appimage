@@ -16,8 +16,7 @@ jobs:
 
     - name: build
       run: |
-        sudo apt update
-        sudo apt install libfuse2
+        sudo apt update && sudo apt install libfuse2 desktop-file-utils
         wget https://raw.githubusercontent.com/ivan-hc/Opera-appimage/main/opera-builder.sh
         chmod a+x ./opera-builder.sh
         ./opera-builder.sh
