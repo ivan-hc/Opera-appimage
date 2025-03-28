@@ -1,3 +1,3 @@
 https://github.com/ivan-hc/Opera-appimage/releases/download/continuous/Opera-Web-Browser-beta-118.0.5461.18-x86_64.AppImage
 https://github.com/ivan-hc/Opera-appimage/releases/download/continuous/Opera-Web-Browser-developer-119.0.5482.0-x86_64.AppImage
-https://github.com/ivan-hc/Opera-appimage/releases/download/continuous/Opera-Web-Browser-stable-117.0.5408.154-x86_64.AppImage
+https://github.com/ivan-hc/Opera-appimage/releases/download/continuous/Opera-Web-Browser-stable-117.0.5408.163-x86_64.AppImage
