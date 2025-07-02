@@ -42,8 +42,8 @@ _create_opera_appimage(){
 	sed -i -e '/TargetEnvironment/d' ./"$APP".AppDir/*.desktop
 	mv ./usr/share/pixmaps/* ./"$APP".AppDir/ || exit 1
 	cp ../libwidevinecdm.so ./"$APP".AppDir/ || exit 1
-	mv ./"$APP".AppDir/libffmpeg.so ./"$APP".AppDir/libffmpeg.so.old || exit 1
-	cp ../libffmpeg.so ./"$APP".AppDir/ || exit 1
+	#mv ./"$APP".AppDir/libffmpeg.so ./"$APP".AppDir/libffmpeg.so.old || exit 1
+	#cp ../libffmpeg.so ./"$APP".AppDir/ || exit 1
 	tar xf ./control.tar.xz
 	VERSION=$(cat control | grep Version | cut -c 10-)
 
