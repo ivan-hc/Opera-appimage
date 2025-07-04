@@ -33,6 +33,7 @@ _create_opera_appimage() {
 	mv ./squashfs-root/lib ./"$APP".AppDir/
 	mv ./squashfs-root/usr ./"$APP".AppDir/
 	mv ./squashfs-root/bin ./"$APP".AppDir/
+	mv ./libffmpeg.so ./"$APP".AppDir/usr/lib/x86_64-linux-gnu/oper*/ || exit 1
 	cp -r ./"$APP".AppDir/usr/share/icons/hicolor/256x256/apps/*.png ./"$APP".AppDir/
 	cp -r ./"$APP".AppDir/usr/share/applications/*.desktop ./"$APP".AppDir/
 	sed -i 's#${SNAP}/usr/share/icons/hicolor/256x256/apps/opera#opera#g' ./"$APP".AppDir/*.desktop
@@ -58,23 +59,34 @@ _create_opera_appimage() {
 	./"$APP".AppDir Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage || exit 1
 }
 
+if ! test -f ./*.snap; then
+	if wget --version | head -1 | grep -q ' 1.'; then
+		wget -q --no-verbose --show-progress --progress=bar "$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/chromium-ffmpeg --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | grep "^http")"
+	else
+		wget "$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/chromium-ffmpeg --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | grep "^http")"
+	fi
+fi
+
+unsquashfs -f ./*.snap
+chromium_dir=$(ls squashfs-root/ | sort | grep "^chromium" | head -1)
+
 BRANCH=""
 CHANNEL="stable"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd ..
 mv ./"$CHANNEL"/*.AppImage* ./
 
 BRANCH="-developer"
 CHANNEL="developer"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd ..
 mv ./"$CHANNEL"/*.AppImage* ./
 
 BRANCH="-beta"
 CHANNEL="beta"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd ..
 mv ./"$CHANNEL"/*.AppImage* ./
