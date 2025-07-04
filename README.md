@@ -25,9 +25,9 @@ And this definitelly solves the issue.
 #### ◆ Can't play videos on many sites
 More banally, Ubuntu is switching all its packages to Snap, Opera developers are using an old ffmpeg in their deb package and none have updated it... so none cares about the deb version of Opera. All workaround seems to point to external third-party sources (see issue https://github.com/ivan-hc/Opera-appimage/issues/1).
 
-However, until the deb package has no fixes, I can't update a "pure" AppImage. We need additional third-party libraries.
+However, until the deb package has no fixes, I can't update a "pure" AppImage. We need additional third-party libraries. Those included in these AppImages are provided by https://github.com/nwjs-ffmpeg-prebuilt (`libffmpeg.so`) and from an official proprietary source (`libwidevinecdm.so`).
 
-Those included in these AppImages are provided by https://github.com/nwjs-ffmpeg-prebuilt (`libffmpeg.so`) and from an official proprietary source (`libwidevinecdm.so`).
+This is why I switched the base to the Snap package... but it sometime has the same problem.
 
 NOTE: Opera, Vivaldi, Brave, Google Chrome... are all browsers based on Chromium. Alternativelly use another web browser, like Brave or Vivaldi, they are multiplatform, privacy oriented and more supported than Opera (at least on the Linux-side). 
 
