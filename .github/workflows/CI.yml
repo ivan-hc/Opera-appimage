@@ -17,8 +17,8 @@ jobs:
     - name: build
       run: |
         sudo apt update && sudo apt install desktop-file-utils
-        chmod a+x ./opera-builder.sh
-        ./opera-builder.sh
+        chmod a+x ./opera-snap.sh
+        ./opera-snap.sh
         mkdir dist
         mv *AppImage* dist/
 
