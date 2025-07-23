@@ -16,7 +16,7 @@ fi
 
 _create_opera_appimage() {
 	# DOWNLOAD THE SNAP PACKAGE
-	SNAP_PKG=$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/opera$BRANCH --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | grep "^http")
+	SNAP_PKG=$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/opera$BRANCH --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | tr ' ' '\n' | grep "^http.*snap$")
 	if ! test -f ./*.snap; then
 		if wget --version | head -1 | grep -q ' 1.'; then
 			wget -q --no-verbose --show-progress --progress=bar "$SNAP_PKG" || exit 1
