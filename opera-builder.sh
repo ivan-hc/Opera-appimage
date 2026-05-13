@@ -14,17 +14,38 @@ fi
 
 # DOWNLOAD WIDEVINE
 if ! test -f ./*.deb; then
-	wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || exit 1
+	if wget --version | head -1 | grep -q ' 1.'; then
+		wget -q --no-verbose --show-progress --progress=bar https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || exit 1
+	else
+		wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || exit 1
+	fi
 	ar x ./*.deb
 	tar xf ./data.tar.xz
 	mv ./opt/google/chrome/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so ./libwidevinecdm.so || exit 1
 fi
 
 # DOWNLOAD A WORKING VERSION OF FFMPEG (THE ONE IN OPERA IS BROKEN...FROM YEARS)
-if ! test -f ./*.zip; then
-	wget "$(curl -Ls https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/latest | sed 's/[()",{} ]/\n/g' | grep -oi "https.*linux.*64.*zip$" | head -1)" || exit 1
-	unzip ./*.zip || exit 1
+if ! test -f ./*.snap; then
+	if wget --version | head -1 | grep -q ' 1.'; then
+		wget -q --no-verbose --show-progress --progress=bar "$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/chromium-ffmpeg --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | grep "^http")" || exit 1
+	else
+		wget "$(curl -H 'Snap-Device-Series: 16' http://api.snapcraft.io/v2/snaps/info/chromium-ffmpeg --silent | sed 's/\[{/\n/g; s/},{/\n/g' | grep -i "stable" | head -1 | sed 's/[()",{} ]/\n/g' | grep "^http")" || exit 1
+	fi
 fi
+
+unsquashfs -f ./*.snap
+
+echo "----------------------------------------------------------------------------"
+
+echo "List of the chromium-ffmpeg directories"
+
+ls squashfs-root/ | sort --version-sort | grep "chromium-ffmpeg"
+
+chromium_dir=$(ls squashfs-root/ | sort --version-sort | grep "chromium-ffmpeg-[0-9]" | tail -1)
+
+echo "Selected: $chromium_dir"
+
+echo "----------------------------------------------------------------------------"
 
 # CREATE OPERA BROWSER APPIMAGES
 
@@ -42,8 +63,8 @@ _create_opera_appimage(){
 	sed -i -e '/TargetEnvironment/d' ./"$APP".AppDir/*.desktop
 	mv ./usr/share/pixmaps/* ./"$APP".AppDir/ || exit 1
 	cp ../libwidevinecdm.so ./"$APP".AppDir/ || exit 1
-	#mv ./"$APP".AppDir/libffmpeg.so ./"$APP".AppDir/libffmpeg.so.old || exit 1
-	#cp ../libffmpeg.so ./"$APP".AppDir/ || exit 1
+	mv ./"$APP".AppDir/libffmpeg.so ./"$APP".AppDir/libffmpeg.so.old || exit 1
+	cp ./libffmpeg.so ./"$APP".AppDir/ || exit 1
 	tar xf ./control.tar.xz
 	VERSION=$(cat control | grep Version | cut -c 10-)
 
@@ -66,19 +87,19 @@ _create_opera_appimage(){
 }
 
 CHANNEL="stable"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd .. || exit 1
 mv ./"$CHANNEL"/*.AppImage* ./
 
 CHANNEL="beta"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd .. || exit 1
 mv ./"$CHANNEL"/*.AppImage* ./
 
 CHANNEL="developer"
-mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cd "$CHANNEL" || exit 1
+mkdir -p "$CHANNEL" && cp ./appimagetool ./"$CHANNEL"/appimagetool && cp -r ./squashfs-root/"$chromium_dir"/chromium-ffmpeg/* ./"$CHANNEL"/ && cd "$CHANNEL" || exit 1
 _create_opera_appimage
 cd .. || exit 1
 mv ./"$CHANNEL"/*.AppImage* ./
