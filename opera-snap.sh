@@ -8,7 +8,7 @@ cd ./tmp || exit 1
 
 # DOWNLOAD APPIMAGETOOL
 if ! test -f ./appimagetool; then
-	wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+	wget -q https://github.com/pkgforge-dev/appimagetool/releases/latest/download/appimagetool-x86_64-linux -O appimagetool
 	chmod a+x ./appimagetool
 fi
 
@@ -36,6 +36,7 @@ _create_opera_appimage() {
 	mv ./squashfs-root/bin ./"$APP".AppDir/
 	mv ./libffmpeg.so ./"$APP".AppDir/usr/lib/x86_64-linux-gnu/oper*/ || exit 1
 	cp -r ./"$APP".AppDir/usr/share/icons/hicolor/256x256/apps/*.png ./"$APP".AppDir/
+	cp ./"$APP".AppDir/*.png ./"$APP".AppDir/.DirIcon
 	cp -r ./"$APP".AppDir/usr/share/applications/*.desktop ./"$APP".AppDir/
 	sed -i 's#${SNAP}/usr/share/icons/hicolor/256x256/apps/opera#opera#g' ./"$APP".AppDir/*.desktop
 	sed -i 's/\.png//g' ./"$APP".AppDir/*.desktop
@@ -55,9 +56,10 @@ _create_opera_appimage() {
 		sed -i "s/CHROME/$APP-$CHANNEL/g" ./"$APP".AppDir/AppRun
 	fi
 
-	ARCH=x86_64 ./appimagetool --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
+	APPIMAGE_ARCH=x86_64 VERSION="$VERSION" ./appimagetool \
 	-u "gh-releases-zsync|$GITHUB_REPOSITORY_OWNER|Opera-appimage|continuous|*-$CHANNEL-*x86_64.AppImage.zsync" \
-	./"$APP".AppDir Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage || exit 1
+	-n Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage \
+	./"$APP".AppDir || exit 1
 }
 
 if ! test -f ./*.snap; then
