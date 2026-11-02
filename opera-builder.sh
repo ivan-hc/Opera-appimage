@@ -8,7 +8,7 @@ cd ./tmp || exit 1
 
 # DOWNLOAD APPIMAGETOOL
 if ! test -f ./appimagetool; then
-	wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool || exit 1
+	wget -q https://github.com/pkgforge-dev/appimagetool/releases/latest/download/appimagetool-x86_64-linux -O appimagetool || exit 1
 	chmod a+x ./appimagetool
 fi
 
@@ -93,6 +93,8 @@ _create_opera_appimage(){
 	mv ./usr/share/applications/*.desktop ./"$APP".AppDir/ || exit 1
 	sed -i -e '/TargetEnvironment/d' ./"$APP".AppDir/*.desktop
 	mv ./usr/share/pixmaps/* ./"$APP".AppDir/ || exit 1
+	cp -r ./usr/share/icons/hicolor/256x256/apps/*.png ./"$APP".AppDir/ 2>/dev/null || cp -r ./usr/share/icons/hicolor/128x128/apps/*.png ./"$APP".AppDir/ 2>/dev/null
+	cp ./"$APP".AppDir/*.png ./"$APP".AppDir/.DirIcon
 	cp ../libwidevinecdm.so ./"$APP".AppDir/ || exit 1
 	_ffmv
 	tar xf ./control.tar.xz
@@ -111,9 +113,10 @@ _create_opera_appimage(){
 	else
 		sed -i "s/CHROME/$APP-$CHANNEL/g" ./"$APP".AppDir/AppRun
 	fi
-	ARCH=x86_64 ./appimagetool --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
+	APPIMAGE_ARCH=x86_64 VERSION="$VERSION" ./appimagetool \
 	-u "gh-releases-zsync|$GITHUB_REPOSITORY_OWNER|Opera-appimage|continuous|*-$CHANNEL-*x86_64.AppImage.zsync" \
-	./"$APP".AppDir Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage || exit 1
+	-n Opera-Web-Browser-"$CHANNEL"-"$VERSION"-x86_64.AppImage \
+	./"$APP".AppDir || exit 1
 }
 
 CHANNEL="stable"
